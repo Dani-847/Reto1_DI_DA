@@ -7,7 +7,7 @@ import java.util.logging.Logger;
 public class CsvUserService implements UserService {
 
     private final String archivo;
-    private static Integer lastId = -1;
+    private static int lastId = -1;
     private static final Logger logger = Logger.getLogger(CsvUserService.class.getName());
 
     public CsvUserService(String csvFile) {
@@ -31,28 +31,30 @@ public class CsvUserService implements UserService {
     @Override
     public List<User> findAll() {
         var salida = new ArrayList<User>();
+        int maxId = -1;
 
         logger.info("Abriendo archivo");
         try (BufferedReader br = new BufferedReader(new FileReader(new File(archivo)))) {
-            var contenido = br.lines();
-
-            contenido.forEach(line -> {
+            br.lines().forEach(line -> {
                 String[] lineArray = line.split(",");
                 if (lineArray.length < 3) {
                     logger.severe("Linea mal formada");
                 } else {
                     User user = new User();
-                    user.setId(Integer.parseInt(lineArray[0]));
-                    user.setEmail(lineArray[1]);
-                    user.setPassword(lineArray[2]);
+                    user.setId(Integer.parseInt(lineArray[0].trim()));
+                    user.setEmail(lineArray[1].trim());
+                    user.setPassword(lineArray[2].trim());
                     salida.add(user);
                 }
             });
-            lastId = salida.size();
-            logger.info("Actualizo tamaño: " + lastId);
+            for (User u : salida) {
+                if (u.getId() > maxId) maxId = u.getId();
+            }
+            lastId = Math.max(lastId, maxId);
+            logger.info("lastId actualizado a: " + lastId);
 
         } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
+            logger.warning("Archivo no encontrado: " + archivo);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -63,16 +65,15 @@ public class CsvUserService implements UserService {
     public Optional<User> save(User user) {
         logger.info("Abriendo el archivo para escribir");
         try (var bfw = new BufferedWriter(new FileWriter(new File(archivo), true))) {
-            lastId++;
+            lastId = lastId < 0 ? 0 : lastId + 1;
             user.setId(lastId);
-            logger.info("Actualizando id: " + lastId);
 
             String salida = new StringBuilder()
                     .append(user.getId()).append(",")
                     .append(user.getEmail()).append(",")
-                    .append(user.getPassword()).toString();
+                    .append(user.getPassword())
+                    .toString();
 
-            logger.info("Nuevo usuario creado");
             bfw.write(salida);
             bfw.newLine();
             logger.info("Usuario guardado");

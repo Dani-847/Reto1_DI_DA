@@ -9,6 +9,8 @@ import org.drk.user.UserService;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -22,6 +24,7 @@ public class ListView extends JFrame {
 
     private ArrayList<Pelicula> peliculas = new ArrayList<>();
     private JMenuItem menuItemAñadir;
+    private JMenuItem menuItemEliminar;
 
     public ListView(DataService ds, UserService us) {
         dataservice = ds;
@@ -44,15 +47,24 @@ public class ListView extends JFrame {
         table1.setModel(modelo);
 
         loadDataTable();
+        updateAddEnabled(); // habilitar según usuarioActivo ya cargado desde Login inicial
 
         table1.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table1.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && table1.getSelectedRow() >= 0) {
                 Pelicula pelicula = peliculas.get(table1.getSelectedRow());
                 ContextService.getInstance().addItem("peliculaSeleccionada", pelicula);
+                updateEliminarEnabled();
                 new Details(this).setVisible(true);
             }
         });
+
+        var actionEliminar = new AbstractAction() {
+            @Override public void actionPerformed(ActionEvent e) { performEliminar(); }
+        };
+        table1.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "eliminar");
+        table1.getActionMap().put("eliminar", actionEliminar);
     }
 
     private void loadDataTable() {
@@ -71,6 +83,8 @@ public class ListView extends JFrame {
             var fila = new Object[]{ p.getId(), p.getTitulo(), p.getDescripcion() };
             modelo.addRow(fila);
         });
+
+        updateEliminarEnabled();
     }
 
     private JMenuBar PrepareMenuBar() {
@@ -78,22 +92,23 @@ public class ListView extends JFrame {
         JMenu jMenuInicio = new JMenu("Inicio");
         JMenuItem menuItemLogin = new JMenuItem("Login");
         menuItemAñadir = new JMenuItem("Añadir");
+        menuItemEliminar = new JMenuItem("Eliminar");
         menuItemAñadir.setEnabled(false);
+        menuItemEliminar.setEnabled(false);
         JMenuItem menuItemSalir = new JMenuItem("Salir");
 
         menuBar.add(jMenuInicio);
         jMenuInicio.add(menuItemLogin);
         jMenuInicio.addSeparator();
         jMenuInicio.add(menuItemAñadir);
+        jMenuInicio.add(menuItemEliminar);
         jMenuInicio.addSeparator();
         jMenuInicio.add(menuItemSalir);
 
         menuItemLogin.addActionListener(e -> {
             new Login(this, userservice).setVisible(true);
-            ContextService.getInstance().getItem("usuarioActivo").ifPresent(_ -> {
-                menuItemAñadir.setEnabled(true);
-                loadDataTable();
-            });
+            updateAddEnabled();
+            loadDataTable();
         });
 
         menuItemSalir.addActionListener(e -> System.exit(0));
@@ -101,7 +116,48 @@ public class ListView extends JFrame {
             new CreateForm(dataservice).setVisible(true);
             loadDataTable();
         });
+        menuItemEliminar.addActionListener(e -> performEliminar());
         return menuBar;
+    }
+
+    private void performEliminar() {
+        int row = table1.getSelectedRow();
+        if (row < 0) return;
+
+        User user = (User) ContextService.getInstance().getItem("usuarioActivo").orElse(null);
+        if (user == null) return;
+
+        Pelicula pelicula = peliculas.get(row);
+        if (!Objects.equals(pelicula.getUsuarioId(), user.getId())) {
+            JOptionPane.showMessageDialog(this, "Solo puede eliminar sus propias películas", "", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int r = JOptionPane.showConfirmDialog(this,
+                "¿Eliminar \"" + pelicula.getTitulo() + "\"?", "Confirmar", JOptionPane.YES_NO_OPTION);
+        if (r == JOptionPane.YES_OPTION) {
+            if (dataservice.deleteById(pelicula.getId())) {
+                loadDataTable();
+            } else {
+                JOptionPane.showMessageDialog(this, "No se pudo eliminar", "", JOptionPane.WARNING_MESSAGE);
+            }
+        }
+    }
+
+    private void updateEliminarEnabled() {
+        User user = (User) ContextService.getInstance().getItem("usuarioActivo").orElse(null);
+        boolean enabled = false;
+        int row = table1.getSelectedRow();
+        if (user != null && row >= 0 && row < peliculas.size()) {
+            Pelicula p = peliculas.get(row);
+            enabled = Objects.equals(p.getUsuarioId(), user.getId());
+        }
+        if (menuItemEliminar != null) menuItemEliminar.setEnabled(enabled);
+    }
+
+    private void updateAddEnabled() {
+        boolean loggedIn = ContextService.getInstance().getItem("usuarioActivo").isPresent();
+        if (menuItemAñadir != null) menuItemAñadir.setEnabled(loggedIn);
     }
 
     public void start() { setVisible(true); }

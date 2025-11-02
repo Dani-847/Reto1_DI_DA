@@ -64,7 +64,7 @@
               </grid>
             </constraints>
             <properties>
-              <text value="juan.perez@example.com"/>
+              <text value="kato.glasc@fontaine.com"/>
             </properties>
           </component>
           <component id="e6e42" class="javax.swing.JLabel">
@@ -90,7 +90,7 @@
               </grid>
             </constraints>
             <properties>
-              <text value="juan123"/>
+              <text value="kato789"/>
             </properties>
           </component>
         </children>

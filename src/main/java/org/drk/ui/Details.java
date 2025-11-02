@@ -10,14 +10,13 @@ public class Details extends JDialog {
     private JPanel contentPane;
     private JButton buttonOK;
     private JLabel labelId;
-    private JLabel labelNombre;
-    private JLabel labelDescripcion;
+    private JLabel labelTitulo;
     private JLabel labelAño;
-    private JLabel LabelImagen;
-    private JLabel labelPlataforma;     // reutilizado como Director
-    private JLabel labelTipo;           // reutilizado como Género
-    private JLabel labelDesarrolladora; // no aplica, se deja "-"
-    private JLabel labelOwner;          // usuarioId
+    private JLabel labelDirector;
+    private JLabel labelDescripcion;     // reutilizado como Director
+    private JLabel labelImagen;           // reutilizado como Género
+    private JLabel labelGenero; // usuarioId
+    private JLabel labelOwner;
 
     public Details(JFrame parent) {
         setContentPane(contentPane);
@@ -32,13 +31,12 @@ public class Details extends JDialog {
         if (pelicula != null) {
             setTitle(pelicula.getTitulo());
             labelId.setText(String.valueOf(pelicula.getId()));
-            labelNombre.setText(pelicula.getTitulo());
-            labelDescripcion.setText(pelicula.getDescripcion());
+            labelTitulo.setText(pelicula.getTitulo());
             labelAño.setText(String.valueOf(pelicula.getAño()));
-            LabelImagen.setText(pelicula.getImagenUrl());
-            labelPlataforma.setText(pelicula.getDirector());
-            labelTipo.setText(pelicula.getGenero());
-            labelDesarrolladora.setText("-");
+            labelDirector.setText(pelicula.getDirector());
+            labelDescripcion.setText(pelicula.getDescripcion());
+            labelImagen.setText(pelicula.getImagenUrl());
+            labelGenero.setText(pelicula.getGenero());
             labelOwner.setText(String.valueOf(pelicula.getUsuarioId()));
         }
 
