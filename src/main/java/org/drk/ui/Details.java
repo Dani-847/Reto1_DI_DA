@@ -1,56 +1,55 @@
 package org.drk.ui;
 
+import org.drk.context.ContextService;
 import org.drk.data.Pelicula;
 
 import javax.swing.*;
-import java.awt.*;
+import java.awt.event.*;
 
-/**
- * Muestra los detalles completos de una película seleccionada.
- */
 public class Details extends JDialog {
+    private JPanel contentPane;
+    private JButton buttonOK;
+    private JLabel labelId;
+    private JLabel labelNombre;
+    private JLabel labelDescripcion;
+    private JLabel labelAño;
+    private JLabel LabelImagen;
+    private JLabel labelPlataforma;     // reutilizado como Director
+    private JLabel labelTipo;           // reutilizado como Género
+    private JLabel labelDesarrolladora; // no aplica, se deja "-"
+    private JLabel labelOwner;          // usuarioId
 
-    private final Pelicula pelicula;
+    public Details(JFrame parent) {
+        setContentPane(contentPane);
+        setModal(true);
+        getRootPane().setDefaultButton(buttonOK);
+        setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(parent);
 
-    public Details(Frame parent, Pelicula pelicula) {
-        super(parent, "Detalles de Película", true);
-        this.pelicula = pelicula;
-        initUI();
-    }
+        Pelicula pelicula = (Pelicula) ContextService.getInstance()
+                .getItem("peliculaSeleccionada").orElse(null);
 
-    private void initUI() {
-        setSize(500, 600);
-        setLocationRelativeTo(getParent());
-        setLayout(new BorderLayout(10, 10));
-        JPanel info = new JPanel(new GridLayout(6, 1, 5, 5));
-
-        info.add(new JLabel("Título: " + pelicula.getTitulo()));
-        info.add(new JLabel("Año: " + pelicula.getAnio()));
-        info.add(new JLabel("Director: " + pelicula.getDirector()));
-        info.add(new JLabel("Género: " + pelicula.getGenero()));
-
-        JTextArea descripcion = new JTextArea(pelicula.getDescripcion());
-        descripcion.setLineWrap(true);
-        descripcion.setWrapStyleWord(true);
-        descripcion.setEditable(false);
-
-        JScrollPane scroll = new JScrollPane(descripcion);
-        info.add(scroll);
-
-        JLabel imagen = new JLabel();
-        try {
-            ImageIcon icon = new ImageIcon(new java.net.URL(pelicula.getImagenUrl()));
-            Image img = icon.getImage().getScaledInstance(200, 300, Image.SCALE_SMOOTH);
-            imagen.setIcon(new ImageIcon(img));
-        } catch (Exception e) {
-            imagen.setText("Imagen no disponible");
+        if (pelicula != null) {
+            setTitle(pelicula.getTitulo());
+            labelId.setText(String.valueOf(pelicula.getId()));
+            labelNombre.setText(pelicula.getTitulo());
+            labelDescripcion.setText(pelicula.getDescripcion());
+            labelAño.setText(String.valueOf(pelicula.getAño()));
+            LabelImagen.setText(pelicula.getImagenUrl());
+            labelPlataforma.setText(pelicula.getDirector());
+            labelTipo.setText(pelicula.getGenero());
+            labelDesarrolladora.setText("-");
+            labelOwner.setText(String.valueOf(pelicula.getUsuarioId()));
         }
 
-        add(info, BorderLayout.CENTER);
-        add(imagen, BorderLayout.NORTH);
+        buttonOK.addActionListener(e -> onOK());
 
-        JButton cerrarBtn = new JButton("Cerrar");
-        cerrarBtn.addActionListener(e -> dispose());
-        add(cerrarBtn, BorderLayout.SOUTH);
+        contentPane.registerKeyboardAction(e -> onOK(),
+                KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
+                JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+
+        pack();
     }
+
+    private void onOK() { dispose(); }
 }

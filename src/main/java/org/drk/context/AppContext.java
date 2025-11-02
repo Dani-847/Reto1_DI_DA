@@ -1,46 +1,21 @@
 package org.drk.context;
 
+import lombok.Setter;
 import org.drk.data.Pelicula;
 import org.drk.user.User;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- * Clase singleton que mantiene el contexto de ejecución de la aplicación.
- * Permite acceder al usuario actualmente autenticado y a la película seleccionada.
+ * Clase que mantiene el estado actual de la aplicación en memoria.
+ * Contiene el usuario autenticado y la lista de películas visibles en sesión.
+ *
+ * Inspirada en el modelo de "Juegoteca", pero adaptada a soporte multiusuario.
  */
 public class AppContext {
 
-    private static AppContext instance;
+    public static Pelicula peliculaSeleccionada = null;
+    public static User currentUser = null;
 
-    private User usuarioActual;
-    private Pelicula peliculaSeleccionada;
-
-    private AppContext() {}
-
-    public static synchronized AppContext getInstance() {
-        if (instance == null) {
-            instance = new AppContext();
-        }
-        return instance;
-    }
-
-    public User getUsuarioActual() {
-        return usuarioActual;
-    }
-
-    public void setUsuarioActual(User usuarioActual) {
-        this.usuarioActual = usuarioActual;
-    }
-
-    public Pelicula getPeliculaSeleccionada() {
-        return peliculaSeleccionada;
-    }
-
-    public void setPeliculaSeleccionada(Pelicula peliculaSeleccionada) {
-        this.peliculaSeleccionada = peliculaSeleccionada;
-    }
-
-    public void limpiarContexto() {
-        this.usuarioActual = null;
-        this.peliculaSeleccionada = null;
-    }
 }

@@ -1,7 +1,11 @@
 package org.drk.user;
 
+import org.drk.data.Pelicula;
+
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Interfaz para el manejo de usuarios.
@@ -9,23 +13,9 @@ import java.util.List;
  */
 public interface UserService {
 
-    /**
-     * Devuelve todos los usuarios registrados en el archivo CSV.
-     */
-    List<User> leerUsuarios() throws IOException;
+    Optional<User> validate(ArrayList<User> usuarios, String correo, String contraseña);
 
-    /**
-     * Busca un usuario por email y contraseña (autenticación).
-     */
-    User autenticar(String email, String password) throws IOException;
+    public List<User> findAll();
+    Optional<User> save(User user);
 
-    /**
-     * Busca un usuario por su ID.
-     */
-    User buscarPorId(int id) throws IOException;
-
-    /**
-     * Registra un nuevo usuario en el CSV.
-     */
-    void registrarUsuario(User usuario) throws IOException;
 }

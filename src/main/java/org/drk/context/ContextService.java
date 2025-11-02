@@ -1,66 +1,42 @@
 package org.drk.context;
 
+import org.drk.data.CsvDataService;
+import org.drk.data.DataService;
 import org.drk.data.Pelicula;
+import org.drk.user.CsvUserService;
+import org.drk.user.UserService;
 import org.drk.user.User;
 
-import java.util.ArrayList;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 /**
- * Servicio encargado de mantener en memoria las listas de películas y usuarios
- * para evitar relecturas innecesarias desde disco.
+ * Servicio encargado de mantener datos precargados (usuarios y películas)
+ * para evitar relecturas innecesarias de los archivos CSV.
  *
- * Las listas no se modifican directamente para evitar inconsistencias con los CSV.
- * En su lugar, se usan copias temporales.
+ * También proporciona acceso centralizado a los servicios de datos.
  */
 public class ContextService {
 
     private static ContextService instance;
-
-    private List<Pelicula> cachePeliculas = new ArrayList<>();
-    private List<User> cacheUsuarios = new ArrayList<>();
+    private static HashMap<String, Object> data = new HashMap<>();
 
     private ContextService() {}
 
-    public static synchronized ContextService getInstance() {
+    public static ContextService getInstance() {
         if (instance == null) {
             instance = new ContextService();
         }
         return instance;
     }
 
-    public void setPeliculas(List<Pelicula> peliculas) {
-        cachePeliculas.clear();
-        if (peliculas != null) cachePeliculas.addAll(peliculas);
+    public void addItem(String key, Object o) {
+        data.put(key, o);
     }
-
-    public void setUsuarios(List<User> usuarios) {
-        cacheUsuarios.clear();
-        if (usuarios != null) cacheUsuarios.addAll(usuarios);
-    }
-
-    public List<Pelicula> getPeliculas() {
-        return new ArrayList<>(cachePeliculas); // copia para no alterar el original
-    }
-
-    public List<User> getUsuarios() {
-        return new ArrayList<>(cacheUsuarios);
-    }
-
-    public User buscarUsuarioPorId(int id) {
-        return cacheUsuarios.stream()
-                .filter(u -> u.getId() == id)
-                .findFirst()
-                .orElse(null);
-    }
-
-    public List<Pelicula> getPeliculasPorUsuario(int usuarioId) {
-        List<Pelicula> resultado = new ArrayList<>();
-        for (Pelicula p : cachePeliculas) {
-            if (p.getUsuarioId() == usuarioId) {
-                resultado.add(p);
-            }
-        }
-        return resultado;
+    public Optional<Object> getItem(String key) {
+        return Optional.ofNullable(data.get(key));
     }
 }

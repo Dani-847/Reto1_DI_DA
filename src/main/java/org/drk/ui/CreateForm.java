@@ -1,105 +1,85 @@
 package org.drk.ui;
 
-import org.drk.context.AppContext;
-import org.drk.context.ContextService;
+import org.drk.data.DataService;
 import org.drk.data.Pelicula;
 
 import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.io.IOException;
-import java.util.UUID;
+import java.awt.event.*;
 
-/**
- * Formulario para crear una nueva película.
- * Al guardar, se añade al CSV y se actualiza el contexto.
- */
 public class CreateForm extends JDialog {
+    private JPanel contentPane;
+    private JButton buttonOK;
+    private JButton buttonCancel;
+    private JTextField textTitulo;
+    private JComboBox comboBox1;
+    private JSpinner spinnerAño;
 
-    private JTextField tituloField;
-    private JTextField anioField;
-    private JTextField directorField;
-    private JTextField generoField;
-    private JTextField imagenField;
-    private JTextArea descripcionArea;
-    private final ContextService contextService;
+    private DataService dataService;
 
-    public CreateForm(Frame parent, ContextService contextService) {
-        super(parent, "Añadir Película", true);
-        this.contextService = contextService;
-        initUI();
+    public CreateForm(DataService ds) {
+
+        dataService = ds;
+
+        setContentPane(contentPane);
+        setModalityType(ModalityType.APPLICATION_MODAL);
+        getRootPane().setDefaultButton(buttonOK);
+        setResizable(false);
+
+        //( (DefaultComboBoxModel) comboBox1.getModel()).addAll(...);
+
+        spinnerAño.setModel(new SpinnerNumberModel(1990, 1974, 2025, 1));
+
+        buttonOK.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                onOK();
+            }
+        });
+
+        buttonCancel.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                onCancel();
+            }
+        });
+
+        // call onCancel() when cross is clicked
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                onCancel();
+            }
+        });
+
+        // call onCancel() on ESCAPE
+        contentPane.registerKeyboardAction(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                onCancel();
+            }
+        }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+
+        pack();
     }
 
-    private void initUI() {
-        setSize(500, 500);
-        setLocationRelativeTo(getParent());
-        setLayout(new BorderLayout(10, 10));
-        JPanel form = new JPanel(new GridLayout(6, 2, 10, 10));
-        form.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    private void onOK() {
 
-        form.add(new JLabel("Título:"));
-        tituloField = new JTextField();
-        form.add(tituloField);
+        Pelicula pelicula = new Pelicula();
 
-        form.add(new JLabel("Año:"));
-        anioField = new JTextField();
-        form.add(anioField);
+        pelicula.setTitulo(textTitulo.getText());
+        pelicula.setAño((Integer) spinnerAño.getValue());
+        pelicula.setDirector(comboBox1.getSelectedItem().toString());
+        pelicula.setDescripcion("Des");
+        pelicula.setGenero("Gen");
+        pelicula.setImagenUrl("imagenUrl");
+        pelicula.setUsuarioId(0);
 
-        form.add(new JLabel("Director:"));
-        directorField = new JTextField();
-        form.add(directorField);
+        if(dataService.save(pelicula).isEmpty()){
+            JOptionPane.showMessageDialog(this, "Error al guardar","",JOptionPane.WARNING_MESSAGE);
+        } else dispose();
 
-        form.add(new JLabel("Género:"));
-        generoField = new JTextField();
-        form.add(generoField);
-
-        form.add(new JLabel("URL Imagen:"));
-        imagenField = new JTextField();
-        form.add(imagenField);
-
-        form.add(new JLabel("Descripción:"));
-        descripcionArea = new JTextArea(4, 20);
-        JScrollPane scroll = new JScrollPane(descripcionArea);
-        add(form, BorderLayout.CENTER);
-        add(scroll, BorderLayout.SOUTH);
-
-        JPanel botones = new JPanel();
-        JButton guardarBtn = new JButton("Guardar");
-        JButton cancelarBtn = new JButton("Cancelar");
-        botones.add(guardarBtn);
-        botones.add(cancelarBtn);
-        add(botones, BorderLayout.SOUTH);
-
-        guardarBtn.addActionListener(this::guardarPelicula);
-        cancelarBtn.addActionListener(e -> dispose());
     }
 
-    private void guardarPelicula(ActionEvent e) {
-        try {
-            AppContext appCtx = contextService.getAppContext();
-            var usuario = appCtx.getUsuarioActual();
-
-            String id = UUID.randomUUID().toString();
-            String titulo = tituloField.getText().trim();
-            int anio = Integer.parseInt(anioField.getText().trim());
-            String director = directorField.getText().trim();
-            String genero = generoField.getText().trim();
-            String imagen = imagenField.getText().trim();
-            String descripcion = descripcionArea.getText().trim();
-
-            Pelicula nueva = new Pelicula(
-                    id, titulo, anio, director, descripcion, genero, imagen, usuario.getId()
-            );
-
-            contextService.agregarPelicula(nueva);
-            appCtx.getPeliculasUsuario().add(nueva);
-            JOptionPane.showMessageDialog(this, "Película añadida correctamente");
-            dispose();
-
-        } catch (IOException ex) {
-            JOptionPane.showMessageDialog(this, "Error al guardar la película: " + ex.getMessage());
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "El año debe ser un número válido");
-        }
+    private void onCancel() {
+        // add your code here if necessary
+        dispose();
     }
+
 }

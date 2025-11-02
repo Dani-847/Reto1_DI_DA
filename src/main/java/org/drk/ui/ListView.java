@@ -1,133 +1,108 @@
 package org.drk.ui;
 
-import org.drk.context.AppContext;
 import org.drk.context.ContextService;
 import org.drk.data.Pelicula;
+import org.drk.data.DataService;
+import org.drk.user.User;
+import org.drk.user.UserService;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.io.IOException;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
-/**
- * Vista principal que muestra las películas del usuario autenticado.
- */
 public class ListView extends JFrame {
+    private JTable table1;
+    private JPanel panel1;
 
-    private final ContextService contextService;
-    private final AppContext appContext;
+    private final DataService dataservice;
+    private final UserService userservice;
 
-    private JTable tablaPeliculas;
-    private DefaultTableModel modeloTabla;
+    private ArrayList<Pelicula> peliculas = new ArrayList<>();
+    private JMenuItem menuItemAñadir;
 
-    public Main(ContextService contextService) {
-        this.contextService = contextService;
-        this.appContext = contextService.getAppContext();
-        initUI();
-        cargarPeliculas();
-    }
+    public ListView(DataService ds, UserService us) {
+        dataservice = ds;
+        userservice = us;
 
-    private void initUI() {
-        setTitle("Mis Películas - " + appContext.getUsuarioActual().getEmail());
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setSize(900, 500);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setTitle("Películas");
+        setResizable(false);
+        setSize(800, 600);
         setLocationRelativeTo(null);
+        setContentPane(panel1);
 
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        JMenuBar menuBar = PrepareMenuBar();
+        panel1.add(menuBar, BorderLayout.NORTH);
 
-        modeloTabla = new DefaultTableModel(new Object[]{"ID", "Título", "Año", "Director", "Género"}, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) { return false; }
-        };
-        tablaPeliculas = new JTable(modeloTabla);
-        tablaPeliculas.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        panel.add(new JScrollPane(tablaPeliculas), BorderLayout.CENTER);
+        var modelo = new DefaultTableModel();
+        modelo.addColumn("ID");
+        modelo.addColumn("Título");
+        modelo.addColumn("Descripción");
+        table1.setModel(modelo);
 
-        // Botonera inferior
-        JPanel botones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton btnDetalles = new JButton("Detalles");
-        JButton btnAñadir = new JButton("Añadir");
-        JButton btnEliminar = new JButton("Eliminar");
-        JButton btnSalir = new JButton("Cerrar sesión");
+        loadDataTable();
 
-        botones.add(btnDetalles);
-        botones.add(btnAñadir);
-        botones.add(btnEliminar);
-        botones.add(btnSalir);
-        panel.add(botones, BorderLayout.SOUTH);
-
-        // Listeners
-        btnDetalles.addActionListener(this::verDetalles);
-        btnAñadir.addActionListener(this::abrirCrear);
-        btnEliminar.addActionListener(this::eliminarPelicula);
-        btnSalir.addActionListener(e -> cerrarSesion());
-
-        setContentPane(panel);
-    }
-
-    private void cargarPeliculas() {
-        modeloTabla.setRowCount(0);
-        List<Pelicula> peliculas = appContext.getPeliculasUsuario();
-        for (Pelicula p : peliculas) {
-            modeloTabla.addRow(new Object[]{
-                    p.getId(),
-                    p.getTitulo(),
-                    p.getAnio(),
-                    p.getDirector(),
-                    p.getGenero()
-            });
-        }
-    }
-
-    private void verDetalles(ActionEvent e) {
-        int row = tablaPeliculas.getSelectedRow();
-        if (row == -1) {
-            JOptionPane.showMessageDialog(this, "Selecciona una película primero.", "Aviso", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        String id = modeloTabla.getValueAt(row, 0).toString();
-        Pelicula p = appContext.buscarPorId(id);
-        if (p != null) {
-            new Details(this, p).setVisible(true);
-        }
-    }
-
-    private void abrirCrear(ActionEvent e) {
-        new CreateForm(this, contextService).setVisible(true);
-    }
-
-    private void eliminarPelicula(ActionEvent e) {
-        int row = tablaPeliculas.getSelectedRow();
-        if (row == -1) {
-            JOptionPane.showMessageDialog(this, "Selecciona una película para eliminar.", "Aviso", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        String id = modeloTabla.getValueAt(row, 0).toString();
-        Pelicula p = appContext.buscarPorId(id);
-
-        if (p != null) {
-            int confirm = JOptionPane.showConfirmDialog(this, "¿Eliminar '" + p.getTitulo() + "'?", "Confirmar", JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
-                try {
-                    contextService.eliminarPelicula(p);
-                    appContext.getPeliculasUsuario().remove(p);
-                    cargarPeliculas();
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                    JOptionPane.showMessageDialog(this, "Error al eliminar la película.", "Error", JOptionPane.ERROR_MESSAGE);
-                }
+        table1.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table1.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting() && table1.getSelectedRow() >= 0) {
+                Pelicula pelicula = peliculas.get(table1.getSelectedRow());
+                ContextService.getInstance().addItem("peliculaSeleccionada", pelicula);
+                new Details(this).setVisible(true);
             }
-        }
+        });
     }
 
-    private void cerrarSesion() {
-        appContext.cerrarSesion();
-        new Login(contextService).setVisible(true);
-        dispose();
+    private void loadDataTable() {
+        DefaultTableModel modelo = (DefaultTableModel) table1.getModel();
+        modelo.setRowCount(0);
+
+        User usuario = (User) ContextService.getInstance()
+                .getItem("usuarioActivo").orElse(null);
+        Integer uid = usuario != null ? usuario.getId() : null;
+
+        peliculas = dataservice.findAll().stream()
+                .filter(p -> uid == null || Objects.equals(p.getUsuarioId(), uid))
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        peliculas.forEach(p -> {
+            var fila = new Object[]{ p.getId(), p.getTitulo(), p.getDescripcion() };
+            modelo.addRow(fila);
+        });
     }
+
+    private JMenuBar PrepareMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
+        JMenu jMenuInicio = new JMenu("Inicio");
+        JMenuItem menuItemLogin = new JMenuItem("Login");
+        menuItemAñadir = new JMenuItem("Añadir");
+        menuItemAñadir.setEnabled(false);
+        JMenuItem menuItemSalir = new JMenuItem("Salir");
+
+        menuBar.add(jMenuInicio);
+        jMenuInicio.add(menuItemLogin);
+        jMenuInicio.addSeparator();
+        jMenuInicio.add(menuItemAñadir);
+        jMenuInicio.addSeparator();
+        jMenuInicio.add(menuItemSalir);
+
+        menuItemLogin.addActionListener(e -> {
+            new Login(this, userservice).setVisible(true);
+            ContextService.getInstance().getItem("usuarioActivo").ifPresent(_ -> {
+                menuItemAñadir.setEnabled(true);
+                loadDataTable();
+            });
+        });
+
+        menuItemSalir.addActionListener(e -> System.exit(0));
+        menuItemAñadir.addActionListener(e -> {
+            new CreateForm(dataservice).setVisible(true);
+            loadDataTable();
+        });
+        return menuBar;
+    }
+
+    public void start() { setVisible(true); }
 }

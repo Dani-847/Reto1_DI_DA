@@ -2,8 +2,11 @@ package org.drk;
 
 import org.drk.context.ContextService;
 import org.drk.data.CsvDataService;
-import org.drk.user.CsvUserService;
+import org.drk.data.DataService;
+import org.drk.ui.ListView;
 import org.drk.ui.Login;
+import org.drk.user.CsvUserService;
+import org.drk.user.UserService;
 
 import javax.swing.*;
 import java.nio.file.Paths;
@@ -12,31 +15,17 @@ import java.nio.file.Paths;
  * Punto de entrada principal de la aplicación.
  */
 public class App {
-
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            try {
-                // Configuración de rutas
-                var peliculasPath = Paths.get("peliculas.csv");
-                var usuariosPath = Paths.get("usuarios.csv");
+        DataService ds = new CsvDataService("peliculas.csv");
+        UserService us = new CsvUserService("usuarios.csv");
 
-                // Servicios
-                var dataService = new CsvDataService(peliculasPath);
-                var userService = new FileUserService(usuariosPath);
+        Login login = new Login(null, us);
+        login.setVisible(true); // modal, bloquea hasta cerrar
 
-                var context = ContextService.getInstance();
-                context.setPeliculas(dataService.leerPeliculas());
-                context.setUsuarios(userService.leerUsuarios());
-
-                // Lanzar login
-                new Login(context).setVisible(true);
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                JOptionPane.showMessageDialog(null,
-                        "Error al iniciar la aplicación: " + e.getMessage(),
-                        "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        });
+        if (ContextService.getInstance().getItem("usuarioActivo").isPresent()) {
+            new ListView(ds, us).start();
+        } else {
+            System.exit(0);
+        }
     }
 }

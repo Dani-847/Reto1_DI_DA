@@ -1,31 +1,16 @@
 package org.drk.data;
 
-import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 /**
- * Interfaz base para los servicios de acceso a datos (DAO).
- * Define las operaciones de lectura y escritura de películas.
+ *
+ * Interfaz encargada de gestionar la persistencia de los datos
+ *
  */
-public interface DataService {
+public interface DataService{
 
-    /**
-     * Devuelve todas las películas del archivo CSV.
-     */
-    List<Pelicula> leerPeliculas() throws IOException;
+    public List<Pelicula> findAll();
+    Optional<Pelicula> save(Pelicula pelicula);
 
-    /**
-     * Devuelve las películas asociadas a un usuario concreto.
-     */
-    List<Pelicula> leerPeliculasPorUsuario(int usuarioId) throws IOException;
-
-    /**
-     * Añade una nueva película al CSV.
-     */
-    void agregarPelicula(Pelicula pelicula) throws IOException;
-
-    /**
-     * Elimina una película por su ID.
-     */
-    void eliminarPelicula(int id) throws IOException;
 }
