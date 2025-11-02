@@ -83,7 +83,7 @@ public class CsvDataService implements DataService {
     }
 
     @Override
-    public boolean deleteById(int id) {
+    public boolean deleteById(Integer id) {
         logger.info("Eliminando pelicula id=" + id);
         List<Pelicula> todas = findAll();
         boolean removed = todas.removeIf(p -> p.getId() == id);

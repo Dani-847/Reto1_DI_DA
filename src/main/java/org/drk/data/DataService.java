@@ -10,5 +10,5 @@ public interface DataService {
     List<Pelicula> findAll();
     Optional<Pelicula> save(Pelicula pelicula);
 
-    boolean deleteById(int id);
+    boolean deleteById(Integer id);
 }
