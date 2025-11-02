@@ -10,6 +10,5 @@ public interface DataService {
     List<Pelicula> findAll();
     Optional<Pelicula> save(Pelicula pelicula);
 
-    // Nuevo: eliminar por id
     boolean deleteById(int id);
 }

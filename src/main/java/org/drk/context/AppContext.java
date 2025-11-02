@@ -1,11 +1,7 @@
 package org.drk.context;
 
-import lombok.Setter;
 import org.drk.data.Pelicula;
 import org.drk.user.User;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Clase que mantiene el estado actual de la aplicación en memoria.

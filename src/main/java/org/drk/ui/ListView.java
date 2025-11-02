@@ -47,7 +47,7 @@ public class ListView extends JFrame {
         table1.setModel(modelo);
 
         loadDataTable();
-        updateAddEnabled(); // habilitar según usuarioActivo ya cargado desde Login inicial
+        updateAddEnabled();
 
         table1.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table1.getSelectionModel().addListSelectionListener(e -> {
@@ -89,8 +89,8 @@ public class ListView extends JFrame {
 
     private JMenuBar PrepareMenuBar() {
         JMenuBar menuBar = new JMenuBar();
-        JMenu jMenuInicio = new JMenu("Inicio");
-        JMenuItem menuItemLogin = new JMenuItem("Login");
+        JMenu jMenuInicio = new JMenu("Acciones");
+        JMenuItem menuItemLogin = new JMenuItem("Cambiar Usuario");
         menuItemAñadir = new JMenuItem("Añadir");
         menuItemEliminar = new JMenuItem("Eliminar");
         menuItemAñadir.setEnabled(false);

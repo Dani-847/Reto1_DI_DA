@@ -13,9 +13,9 @@ public class Details extends JDialog {
     private JLabel labelTitulo;
     private JLabel labelAño;
     private JLabel labelDirector;
-    private JLabel labelDescripcion;     // reutilizado como Director
-    private JLabel labelImagen;           // reutilizado como Género
-    private JLabel labelGenero; // usuarioId
+    private JLabel labelDescripcion;
+    private JLabel labelImagen;
+    private JLabel labelGenero;
     private JLabel labelOwner;
 
     public Details(JFrame parent) {

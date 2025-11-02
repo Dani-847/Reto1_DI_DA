@@ -14,10 +14,10 @@ public class CreateForm extends JDialog {
     private JButton buttonOK;
     private JButton buttonCancel;
     private JTextField textTitulo;
-    private JComboBox comboBox1;            // Género
+    private JComboBox comboBox1;
     private JSpinner spinnerAño;
-    private JSpinner spinnerPropietario;    // Id usuario (solo lectura)
-    private JTextField textLinkUrl;         // Imagen/Link
+    private JSpinner spinnerPropietario;
+    private JTextField textLinkUrl;
     private JTextArea textAreaDescripcion;
     private JTextField textDirector;
 
@@ -32,17 +32,14 @@ public class CreateForm extends JDialog {
         setResizable(false);
         getRootPane().setDefaultButton(buttonOK);
 
-        // Año
         spinnerAño.setModel(new SpinnerNumberModel(1990, 1900, 2100, 1));
 
-        // Propietario: fijar con el usuario autenticado y deshabilitar edición
         User user = (User) ContextService.getInstance().getItem("usuarioActivo").orElse(null);
         int uid = user != null ? user.getId() : 0;
         spinnerPropietario.setModel(new SpinnerNumberModel(uid, 0, Integer.MAX_VALUE, 1));
         spinnerPropietario.setEnabled(false);
         spinnerPropietario.setToolTipText("Se asigna automáticamente al usuario autenticado");
 
-        // Listeners
         buttonOK.addActionListener(e -> onOK());
         buttonCancel.addActionListener(e -> onCancel());
 

@@ -9,7 +9,6 @@ import org.drk.user.CsvUserService;
 import org.drk.user.UserService;
 
 import javax.swing.*;
-import java.nio.file.Paths;
 
 /**
  * Punto de entrada principal de la aplicación.
@@ -20,7 +19,7 @@ public class App {
         UserService us = new CsvUserService("usuarios.csv");
 
         Login login = new Login(null, us);
-        login.setVisible(true); // modal, bloquea hasta cerrar
+        login.setVisible(true);
 
         if (ContextService.getInstance().getItem("usuarioActivo").isPresent()) {
             new ListView(ds, us).start();
